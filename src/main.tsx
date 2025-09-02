@@ -74,12 +74,13 @@ const AppVersionSwitcher: React.FC = () => {
 
   return (
     <div>
-      <VersionBanner />
-      <div style={{ paddingTop: '48px', height: '100vh' }}>
-        {currentVersion === 'v1' ? <App /> : 
-         currentVersion === 'v2' ? <AppV2 /> :
-         currentVersion === 'v4' ? <AppV4 /> :
-         <AppV3 />}
+      {/*<VersionBanner />*/}
+      <div style={{ paddingTop: '8px', height: '100vh' }}>
+        <AppV4 />
+        {/*{currentVersion === 'v1' ? <App /> : */}
+        {/* currentVersion === 'v2' ? <AppV2 /> :*/}
+        {/* currentVersion === 'v4' ? <AppV4 /> :*/}
+        {/* <AppV3 />}*/}
       </div>
     </div>
   )

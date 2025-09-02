@@ -34,10 +34,12 @@ const DslEditor: React.FC<DslEditorProps> = ({
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [suggestionItems, setSuggestionItems] = useState<string[]>([])
   const [activeSuggestionIdx, setActiveSuggestionIdx] = useState(0)
+  const suggestionListRef = useRef<HTMLDivElement>(null)
   const [suggestionPos, setSuggestionPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 })
   const [currentToken, setCurrentToken] = useState('')
   const [tokenStart, setTokenStart] = useState(0)
   const [hoveredError, setHoveredError] = useState<number | null>(null)
+  const [isNavigatingSuggestions, setIsNavigatingSuggestions] = useState(false)
 
   // Helper functions defined before use
   const escapeHtml = useCallback((str: string) => {
@@ -327,7 +329,10 @@ const DslEditor: React.FC<DslEditorProps> = ({
       .slice(0, 6)
 
     setSuggestionItems(cleanSuggestions)
-    setActiveSuggestionIdx(0)
+    // Only reset index if not actively navigating suggestions
+    if (!isNavigatingSuggestions) {
+      setActiveSuggestionIdx(0)
+    }
     
     // Show suggestions with improved logic
     const hasAssignment = currentLine.includes('=') && !currentLine.endsWith('=')
@@ -353,6 +358,21 @@ const DslEditor: React.FC<DslEditorProps> = ({
     const left = currentLineText.length * charWidth
     
     setSuggestionPos({ top, left })
+  }
+
+  const scrollToSuggestion = (index: number) => {
+    const listElement = suggestionListRef.current
+    if (!listElement) return
+    
+    const suggestionButtons = listElement.querySelectorAll('button')
+    const targetButton = suggestionButtons[index]
+    if (!targetButton) return
+    
+    // Scroll the target suggestion into view
+    targetButton.scrollIntoView({
+      behavior: 'smooth',
+      block: 'nearest'
+    })
   }
 
   const applySuggestion = (suggestion: string) => {
@@ -409,6 +429,17 @@ const DslEditor: React.FC<DslEditorProps> = ({
     setShowSuggestions(false)
   }
 
+  const handleKeyUp = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // Reset navigation flag when releasing arrow keys
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      setIsNavigatingSuggestions(false)
+    }
+    // Call updateSuggestions for other keys
+    if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') {
+      updateSuggestions()
+    }
+  }
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     // Always handle Escape to dismiss suggestions
     if (e.key === 'Escape' && showSuggestions) {
@@ -420,12 +451,22 @@ const DslEditor: React.FC<DslEditorProps> = ({
     if (showSuggestions && suggestionItems.length > 0) {
       if (e.key === 'ArrowDown') {
         e.preventDefault()
-        setActiveSuggestionIdx(prev => Math.min(prev + 1, suggestionItems.length - 1))
+        setIsNavigatingSuggestions(true)
+        setActiveSuggestionIdx(prev => {
+          const newIdx = Math.min(prev + 1, suggestionItems.length - 1)
+          scrollToSuggestion(newIdx)
+          return newIdx
+        })
         return
       }
       if (e.key === 'ArrowUp') {
         e.preventDefault()
-        setActiveSuggestionIdx(prev => Math.max(prev - 1, 0))
+        setIsNavigatingSuggestions(true)
+        setActiveSuggestionIdx(prev => {
+          const newIdx = Math.max(prev - 1, 0)
+          scrollToSuggestion(newIdx)
+          return newIdx
+        })
         return
       }
       if (e.key === 'Enter' || e.key === 'Tab') {
@@ -489,9 +530,9 @@ const DslEditor: React.FC<DslEditorProps> = ({
           <div 
             ref={lineNumbersRef}
             className="flex-shrink-0 bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 overflow-hidden select-none"
-            style={{ width: `${Math.max(3, String(lineCount).length + 1)}ch` }}
+            style={{ width: `${Math.max(4, String(lineCount).length + 2)}ch` }}
           >
-            <div className="p-3 pr-2 text-right text-xs font-mono" style={{ lineHeight: '20px', fontSize: '12px' }}>
+            <div className="p-3 pr-3 text-right text-xs font-mono" style={{ lineHeight: '20px', fontSize: '12px' }}>
               {lineNumbers.map(lineNum => {
                 const hasError = errorsByLine.has(lineNum)
                 const errorData = errorsByLine.get(lineNum)?.[0]
@@ -584,7 +625,7 @@ const DslEditor: React.FC<DslEditorProps> = ({
             value={value}
             onChange={handleTextareaChange}
             onKeyDown={handleKeyDown}
-            onKeyUp={updateSuggestions}
+            onKeyUp={handleKeyUp}
             onClick={updateSuggestions}
             onFocus={updateSuggestions}
             onScroll={syncScroll}
@@ -628,7 +669,7 @@ const DslEditor: React.FC<DslEditorProps> = ({
               </div>
               
               {/* Suggestion items */}
-              <div className="py-1">
+              <div ref={suggestionListRef} className="py-1 max-h-48 overflow-y-auto">
                 {suggestionItems.map((item, idx) => (
                   <button
                     key={`${idx}-${item}`}

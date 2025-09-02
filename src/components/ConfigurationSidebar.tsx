@@ -311,7 +311,7 @@ const ConfigurationSidebar: React.FC<ConfigurationSidebarProps> = ({
   
   
   return (
-    <div className={embedded ? "w-full bg-card flex flex-col" : "w-80 border-r border-border bg-card flex flex-col"}>
+    <div className={embedded ? "w-full bg-card flex flex-col" : "w-80 bg-card flex flex-col"}>
       <div className="p-3 border-b border-border">
         <h2 className="text-lg font-semibold flex items-center gap-2">
           <Cog className="w-5 h-5" />
@@ -319,7 +319,7 @@ const ConfigurationSidebar: React.FC<ConfigurationSidebarProps> = ({
         </h2>
       </div>
       
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col config-tabs-enhanced">
         <TabsList className="grid w-full grid-cols-4 mx-3 mt-3">
           <TabsTrigger value="steps" className="text-xs">
             <Boxes className="w-3 h-3 mr-1" />
@@ -367,7 +367,7 @@ const ConfigurationSidebar: React.FC<ConfigurationSidebarProps> = ({
         </TabsContent>
         
         <TabsContent value="settings" className="flex-1 p-3 space-y-4 overflow-auto">
-          <Card className="p-4">
+          <Card className="p-4 config-card-enhanced">
             <div className="flex items-center gap-2 mb-3">
               <Database className="w-4 h-4" />
               <h3 className="font-medium">Global Settings</h3>
@@ -383,7 +383,7 @@ const ConfigurationSidebar: React.FC<ConfigurationSidebarProps> = ({
             />
           </Card>
           
-          <Card className="p-4">
+          <Card className="p-4 config-card-enhanced">
             <div className="flex items-center gap-2 mb-3">
               <FileText className="w-4 h-4" />
               <h3 className="font-medium">Configuration Info</h3>
@@ -398,7 +398,7 @@ const ConfigurationSidebar: React.FC<ConfigurationSidebarProps> = ({
         </TabsContent>
         
         <TabsContent value="defaults" className="flex-1 p-3 space-y-4 overflow-auto">
-          <Card className="p-4">
+          <Card className="p-4 config-card-enhanced">
             <div className="flex items-center gap-2 mb-3">
               <Layers className="w-4 h-4" />
               <h3 className="font-medium">Step Defaults</h3>
@@ -414,7 +414,7 @@ const ConfigurationSidebar: React.FC<ConfigurationSidebarProps> = ({
             />
           </Card>
           
-          <Card className="p-4">
+          <Card className="p-4 config-card-enhanced">
             <div className="flex items-center gap-2 mb-3">
               <Layers className="w-4 h-4" />
               <h3 className="font-medium">Guard Defaults</h3>
@@ -430,7 +430,7 @@ const ConfigurationSidebar: React.FC<ConfigurationSidebarProps> = ({
             />
           </Card>
           
-          <Card className="p-4">
+          <Card className="p-4 config-card-enhanced">
             <div className="flex items-center gap-2 mb-3">
               <Settings className="w-4 h-4" />
               <h3 className="font-medium">Named Defaults</h3>
@@ -453,7 +453,7 @@ const ConfigurationSidebar: React.FC<ConfigurationSidebarProps> = ({
             />
           </Card>
           
-          <Card className="p-4">
+          <Card className="p-4 config-card-enhanced">
             <div className="flex items-center gap-2 mb-3">
               <FileText className="w-4 h-4" />
               <h3 className="font-medium">Merge Order</h3>

@@ -41,6 +41,70 @@
   background: rgba(107, 114, 128, 0.8);
 }
 
+/* Enhanced Configuration UI - Safe for both light and dark modes */
+.config-tabs-enhanced {
+  /* Add subtle spacing improvements */
+}
+
+.config-tabs-enhanced [role="tablist"] {
+  background: rgba(249, 250, 251, 0.8);
+  border: 1px solid rgb(229, 231, 235);
+  backdrop-filter: blur(8px);
+}
+
+.dark .config-tabs-enhanced [role="tablist"] {
+  background: rgba(17, 24, 39, 0.8);
+  border: 1px solid rgb(55, 65, 81);
+}
+
+.config-tabs-enhanced [role="tab"] {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  transition: all 0.15s ease;
+}
+
+.config-tabs-enhanced [role="tab"]:hover {
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.config-tabs-enhanced [role="tab"][data-state="active"] {
+  background: rgb(59, 130, 246);
+  color: white;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.25);
+}
+
+.config-card-enhanced {
+  border: 1px solid rgb(229, 231, 235);
+  background: rgb(255, 255, 255);
+  transition: all 0.2s ease;
+}
+
+.dark .config-card-enhanced {
+  border: 1px solid rgb(55, 65, 81);
+  background: rgb(17, 24, 39);
+}
+
+.config-card-enhanced:hover {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  border-color: rgb(209, 213, 219);
+}
+
+.dark .config-card-enhanced:hover {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.25);
+  border-color: rgb(75, 85, 99);
+}
+
+/* DSL Editor Maximize Mode - Solid backgrounds for both modes */
+.dsl-maximized-modal {
+  background: rgb(255, 255, 255);
+  backdrop-filter: blur(8px);
+}
+
+.dark .dsl-maximized-modal {
+  background: rgb(17, 24, 39);
+}
+
 :root {
   font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;

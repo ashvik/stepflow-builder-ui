@@ -33,7 +33,6 @@ import {
   Download,
   Upload,
   Maximize2,
-  Minimize2,
   PanelRightClose,
   PanelRightOpen,
   LayoutDashboard,
@@ -190,7 +189,6 @@ viewMode: 'tabs' // Always use multi-tab mode
   const [validationResults, setValidationResults] = useState<Record<string, ValidationIssue[]>>({})
   const [showIssuesPanel, setShowIssuesPanel] = useState(false)
   const [isDslMaximized, setIsDslMaximized] = useState(false)
-  const [isDslMinimized, setIsDslMinimized] = useState(false)
   
   // Collaboration state
   const [collaborationManager] = useState(() => new CollaborationManager(
@@ -1520,41 +1518,11 @@ viewMode: 'tabs' // Always use multi-tab mode
                   : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
               }`}>
               <button
-                onClick={() => {
-                  setActiveTab('dsl')
-                  // Auto-expand if minimized when clicking tab
-                  if (isDslMinimized) {
-                    setIsDslMinimized(false)
-                  }
-                }}
+                onClick={() => setActiveTab('dsl')}
                 className="flex-1 text-left"
               >
                 DSL
               </button>
-              {activeTab === 'dsl' && (
-                <div className="flex items-center gap-1 ml-2">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setIsDslMinimized(!isDslMinimized)
-                    }}
-                    className="p-1 hover:bg-accent/50 rounded transition-colors"
-                    title={isDslMinimized ? "Expand DSL editor" : "Minimize DSL editor"}
-                  >
-                    <Minimize2 className="w-3 h-3" />
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setIsDslMaximized(!isDslMaximized)
-                    }}
-                    className="p-1 hover:bg-accent/50 rounded transition-colors"
-                    title={isDslMaximized ? "Exit fullscreen" : "Maximize DSL editor"}
-                  >
-                    <Maximize2 className="w-3 h-3" />
-                  </button>
-                </div>
-              )}
             </div>
             <button
               className={`flex-1 px-3 py-2 text-sm font-medium transition-colors ${
@@ -1746,11 +1714,9 @@ viewMode: 'tabs' // Always use multi-tab mode
             )}
             {activeTab === 'dsl' && (
               <div className={`${
-                isDslMinimized 
-                  ? 'h-0 overflow-hidden' 
-                  : isDslMaximized 
-                    ? 'fixed inset-0 z-50 bg-background' 
-                    : 'h-full overflow-auto'
+                isDslMaximized 
+                  ? 'fixed inset-0 z-50 dsl-maximized-modal' 
+                  : 'h-full overflow-auto'
               } transition-all duration-300`}>
                 {isDslMaximized && (
                   <div className="flex items-center justify-between p-4 border-b">
@@ -1764,12 +1730,29 @@ viewMode: 'tabs' // Always use multi-tab mode
                     </button>
                   </div>
                 )}
-                <div className={`${isDslMaximized ? 'h-[calc(100vh-5rem)] overflow-auto p-6' : 'p-3'}`}>
-                  <DslViewer
-                    config={appState.config}
-                    onConfigChange={(newConfig) => setAppState(prev => ({ ...prev, config: newConfig }))}
-                    components={appState.components}
-                  />
+                <div className={`${isDslMaximized ? 'h-[calc(100vh-5rem)] overflow-auto' : 'h-full'} flex flex-col`}>
+                  {!isDslMaximized && (
+                    <div className="flex items-center justify-between px-3 py-2 border-b bg-muted/30">
+                      <div className="flex items-center gap-2">
+                        <FileCode className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-sm font-medium text-muted-foreground">DSL Editor</span>
+                      </div>
+                      <button
+                        onClick={() => setIsDslMaximized(true)}
+                        className="p-1 hover:bg-accent rounded transition-colors"
+                        title="Maximize DSL editor (F11)"
+                      >
+                        <Maximize2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+                  <div className={`${isDslMaximized ? 'p-6' : 'p-3'} flex-1 overflow-auto`}>
+                    <DslViewer
+                      config={appState.config}
+                      onConfigChange={(newConfig) => setAppState(prev => ({ ...prev, config: newConfig }))}
+                      components={appState.components}
+                    />
+                  </div>
                 </div>
               </div>
             )}
