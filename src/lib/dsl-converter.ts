@@ -288,9 +288,11 @@ function formatEdge(edge: EdgeDef): string {
   if (of) {
     if (of.strategy === 'ALTERNATIVE') fail = ` fail -> ${of.alternativeTarget}`
     else if (of.strategy === 'RETRY') {
-      const d = of.retryDelay || 0
+      const d = of.retryDelay || (of as any).delay || 0
       const dur = d ? (d % 60000 === 0 ? `${d / 60000}m` : d % 1000 === 0 ? `${d / 1000}s` : `${d}ms`) : ''
-      fail = ` fail retry ${of.retryAttempts || 1}x${dur ? ` / ${dur}` : ''}`
+      // Support both retryAttempts (internal format) and attempts (YAML format)
+      const attempts = of.retryAttempts || (of as any).attempts || 1
+      fail = ` fail retry ${attempts}x${dur ? ` / ${dur}` : ''}`
     } else if (of.strategy === 'SKIP') fail = ' fail skip'
     else if (of.strategy === 'STOP') fail = ' fail stop'
     else if (of.strategy === 'CONTINUE') fail = ' fail continue'

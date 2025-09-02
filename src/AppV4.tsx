@@ -33,6 +33,7 @@ import {
   Download,
   Upload,
   Maximize2,
+  Minimize2,
   PanelRightClose,
   PanelRightOpen,
   LayoutDashboard,
@@ -188,6 +189,8 @@ viewMode: 'tabs' // Always use multi-tab mode
   const [isResizing, setIsResizing] = useState(false)
   const [validationResults, setValidationResults] = useState<Record<string, ValidationIssue[]>>({})
   const [showIssuesPanel, setShowIssuesPanel] = useState(false)
+  const [isDslMaximized, setIsDslMaximized] = useState(false)
+  const [isDslMinimized, setIsDslMinimized] = useState(false)
   
   // Collaboration state
   const [collaborationManager] = useState(() => new CollaborationManager(
@@ -464,6 +467,33 @@ viewMode: 'tabs' // Always use multi-tab mode
     window.addEventListener('stepflow-config-imported', handler as any)
     return () => window.removeEventListener('stepflow-config-imported', handler as any)
   }, [appState.config, generateGraphForWorkflow])
+
+  // Handle keyboard shortcuts for DSL editor
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (isDslMaximized) {
+          setIsDslMaximized(false)
+          e.preventDefault()
+        }
+      }
+      // F11 to toggle fullscreen (common shortcut)
+      if (e.key === 'F11' && activeTab === 'dsl') {
+        e.preventDefault()
+        setIsDslMaximized(!isDslMaximized)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isDslMaximized, activeTab])
+
+  // Reset DSL states when switching away from DSL tab
+  useEffect(() => {
+    if (activeTab !== 'dsl') {
+      setIsDslMaximized(false)
+    }
+  }, [activeTab])
 
   // Selected IDs based on current mode
   const selectedNodeIds = appState.ui.viewMode === 'tabs' 
@@ -870,6 +900,33 @@ viewMode: 'tabs' // Always use multi-tab mode
     return transformedConfig
   }, [])
 
+  // Transform config from YAML input (rename attempts to retryAttempts, delay to retryDelay)
+  const transformConfigFromYaml = useCallback((config: StepFlowConfig): StepFlowConfig => {
+    const transformedConfig = JSON.parse(JSON.stringify(config)) // Deep clone
+    
+    // Transform edges in workflows
+    if (transformedConfig.workflows) {
+      Object.values(transformedConfig.workflows).forEach((workflow: any) => {
+        if (workflow.edges) {
+          workflow.edges.forEach((edge: any) => {
+            if (edge.onFailure && edge.onFailure.strategy === 'RETRY') {
+              if (edge.onFailure.attempts !== undefined) {
+                edge.onFailure.retryAttempts = edge.onFailure.attempts
+                delete edge.onFailure.attempts
+              }
+              if (edge.onFailure.delay !== undefined) {
+                edge.onFailure.retryDelay = edge.onFailure.delay
+                delete edge.onFailure.delay
+              }
+            }
+          })
+        }
+      })
+    }
+    
+    return transformedConfig
+  }, [])
+
   // YAML Export (simplified like V1)
   const exportYAML = useCallback(() => {
     try {
@@ -900,7 +957,10 @@ viewMode: 'tabs' // Always use multi-tab mode
         reader.onload = (e) => {
           try {
             const yaml = e.target?.result as string
-            const parsed = YAML.parse(yaml) as StepFlowConfig
+            let parsed = YAML.parse(yaml) as StepFlowConfig
+            
+            // Transform YAML format to internal format (attempts -> retryAttempts, delay -> retryDelay)
+            parsed = transformConfigFromYaml(parsed)
             const hasWorkflows = Object.keys(parsed.workflows || {}).length > 0
             const hasRestrictedSections =
               (parsed.steps && Object.keys(parsed.steps).length > 0) ||
@@ -1454,16 +1514,48 @@ viewMode: 'tabs' // Always use multi-tab mode
             >
               YAML
             </button>
-            <button
-              className={`flex-1 px-3 py-2 text-sm font-medium transition-colors ${
+            <div className={`flex-1 flex items-center justify-between px-3 py-2 text-sm font-medium transition-colors ${
                 activeTab === 'dsl'
                   ? 'text-primary border-b-2 border-primary bg-accent/20'
                   : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-              }`}
-              onClick={() => setActiveTab('dsl')}
-            >
-              DSL
-            </button>
+              }`}>
+              <button
+                onClick={() => {
+                  setActiveTab('dsl')
+                  // Auto-expand if minimized when clicking tab
+                  if (isDslMinimized) {
+                    setIsDslMinimized(false)
+                  }
+                }}
+                className="flex-1 text-left"
+              >
+                DSL
+              </button>
+              {activeTab === 'dsl' && (
+                <div className="flex items-center gap-1 ml-2">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setIsDslMinimized(!isDslMinimized)
+                    }}
+                    className="p-1 hover:bg-accent/50 rounded transition-colors"
+                    title={isDslMinimized ? "Expand DSL editor" : "Minimize DSL editor"}
+                  >
+                    <Minimize2 className="w-3 h-3" />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setIsDslMaximized(!isDslMaximized)
+                    }}
+                    className="p-1 hover:bg-accent/50 rounded transition-colors"
+                    title={isDslMaximized ? "Exit fullscreen" : "Maximize DSL editor"}
+                  >
+                    <Maximize2 className="w-3 h-3" />
+                  </button>
+                </div>
+              )}
+            </div>
             <button
               className={`flex-1 px-3 py-2 text-sm font-medium transition-colors ${
                 activeTab === 'properties'
@@ -1653,12 +1745,32 @@ viewMode: 'tabs' // Always use multi-tab mode
               </div>
             )}
             {activeTab === 'dsl' && (
-              <div className="h-full overflow-auto p-3">
-                <DslViewer
-                  config={appState.config}
-                  onConfigChange={(newConfig) => setAppState(prev => ({ ...prev, config: newConfig }))}
-                  components={appState.components}
-                />
+              <div className={`${
+                isDslMinimized 
+                  ? 'h-0 overflow-hidden' 
+                  : isDslMaximized 
+                    ? 'fixed inset-0 z-50 bg-background' 
+                    : 'h-full overflow-auto'
+              } transition-all duration-300`}>
+                {isDslMaximized && (
+                  <div className="flex items-center justify-between p-4 border-b">
+                    <h2 className="text-lg font-semibold">DSL Editor - Fullscreen</h2>
+                    <button
+                      onClick={() => setIsDslMaximized(false)}
+                      className="p-2 hover:bg-accent rounded transition-colors"
+                      title="Exit fullscreen"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                )}
+                <div className={`${isDslMaximized ? 'h-[calc(100vh-5rem)] overflow-auto p-6' : 'p-3'}`}>
+                  <DslViewer
+                    config={appState.config}
+                    onConfigChange={(newConfig) => setAppState(prev => ({ ...prev, config: newConfig }))}
+                    components={appState.components}
+                  />
+                </div>
               </div>
             )}
             
