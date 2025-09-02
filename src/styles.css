@@ -1,0 +1,650 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom scrollbar styles */
+[data-scrollbar-styled="true"] {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+}
+
+[data-scrollbar-styled="true"]::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+[data-scrollbar-styled="true"]::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 4px;
+}
+
+[data-scrollbar-styled="true"]::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.5);
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+[data-scrollbar-styled="true"]::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.8);
+}
+
+.dark [data-scrollbar-styled="true"] {
+  scrollbar-color: rgba(107, 114, 128, 0.5) transparent;
+}
+
+.dark [data-scrollbar-styled="true"]::-webkit-scrollbar-thumb {
+  background: rgba(107, 114, 128, 0.5);
+}
+
+.dark [data-scrollbar-styled="true"]::-webkit-scrollbar-thumb:hover {
+  background: rgba(107, 114, 128, 0.8);
+}
+
+:root {
+  font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+  
+  /* Smooth cursor movement */
+  cursor: default;
+}
+
+/* Better text selection */
+::selection {
+  background: rgba(59, 130, 246, 0.3);
+}
+
+.dark ::selection {
+  background: rgba(59, 130, 246, 0.4);
+}
+
+/* Performance optimizations */
+* {
+  /* Promote elements that change frequently to their own layer */
+  will-change: auto;
+}
+
+.resize-handle {
+  will-change: transform;
+}
+
+.editor-layer {
+  will-change: transform, opacity;
+}
+
+/* Better resize cursor */
+.cursor-col-resize {
+  cursor: col-resize !important;
+
+  /* Custom CSS variables for shadcn/ui */
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+  --primary: 221.2 83.2% 53.3%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 210 40% 96%;
+  --secondary-foreground: 222.2 84% 4.9%;
+  --muted: 210 40% 96%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --accent: 210 40% 96%;
+  --accent-foreground: 222.2 84% 4.9%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 221.2 83.2% 53.3%;
+  --radius: 0.5rem;
+}
+
+.dark {
+  --background: 222.2 84% 4.9%;
+  --foreground: 210 40% 98%;
+  --card: 222.2 84% 4.9%;
+  --card-foreground: 210 40% 98%;
+  --popover: 222.2 84% 4.9%;
+  --popover-foreground: 210 40% 98%;
+  --primary: 217.2 91.2% 59.8%;
+  --primary-foreground: 222.2 84% 4.9%;
+  --secondary: 217.2 32.6% 17.5%;
+  --secondary-foreground: 210 40% 98%;
+  --muted: 217.2 32.6% 17.5%;
+  --muted-foreground: 215 20.2% 65.1%;
+  --accent: 217.2 32.6% 17.5%;
+  --accent-foreground: 210 40% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 217.2 32.6% 17.5%;
+  --input: 217.2 32.6% 17.5%;
+  --ring: 224.3 76.3% 94.1%;
+}
+
+/* DSL Syntax Highlighting Styles */
+.dsl-section { 
+  color: #8250df; 
+  font-weight: 700; 
+}
+.dark .dsl-section { 
+  color: #d2a8ff; 
+}
+
+.dsl-keyword { 
+  color: #cf222e; 
+  font-weight: 600; 
+}
+.dark .dsl-keyword { 
+  color: #ff7b72; 
+}
+
+.dsl-identifier { 
+  color: #0969da; 
+  font-weight: 500; 
+}
+.dark .dsl-identifier { 
+  color: #58a6ff; 
+}
+
+.dsl-type {
+  color: #1f883d;
+  font-weight: 500;
+}
+.dark .dsl-type {
+  color: #3fb950;
+}
+
+.dsl-property { 
+  color: #0550ae; 
+  font-weight: 500; 
+}
+.dark .dsl-property { 
+  color: #79c0ff; 
+}
+
+.dsl-value {
+  color: #0a3069;
+}
+.dark .dsl-value {
+  color: #a5d6ff;
+}
+
+.dsl-string { 
+  color: #0a3069; 
+}
+.dark .dsl-string { 
+  color: #a5d6ff; 
+}
+
+.dsl-string-content {
+  color: #0550ae;
+}
+.dark .dsl-string-content {
+  color: #79c0ff;
+}
+
+.dsl-number { 
+  color: #0550ae; 
+  font-weight: 500; 
+}
+.dark .dsl-number { 
+  color: #79c0ff; 
+}
+
+.dsl-boolean { 
+  color: #cf222e; 
+  font-weight: 600; 
+}
+.dark .dsl-boolean { 
+  color: #ff7b72; 
+}
+
+.dsl-duration {
+  color: #8250df;
+  font-weight: 500;
+}
+.dark .dsl-duration {
+  color: #d2a8ff;
+}
+
+.dsl-comment { 
+  color: #656d76; 
+  font-style: italic; 
+}
+.dark .dsl-comment { 
+  color: #8b949e; 
+}
+
+.dsl-arrow { 
+  color: #cf222e; 
+  font-weight: 700; 
+}
+.dark .dsl-arrow { 
+  color: #ff7b72; 
+}
+
+.dsl-operator { 
+  color: #8250df; 
+  font-weight: 600; 
+}
+.dark .dsl-operator { 
+  color: #d2a8ff; 
+}
+
+.dsl-guard {
+  color: #1f883d;
+  font-weight: 500;
+}
+.dark .dsl-guard {
+  color: #3fb950;
+}
+
+.dsl-punctuation { 
+  color: #24292f; 
+}
+.dark .dsl-punctuation { 
+  color: #f0f6fc; 
+}
+
+/* Enhanced Light Mode Styling for Better Contrast */
+:root:not(.dark) {
+  /* Enhanced borders and backgrounds for light mode */
+  --card: 0 0% 98%;
+  --card-foreground: 222.2 84% 4.9%;
+  --popover: 0 0% 98%;
+  --muted: 220 14.3% 95.9%;
+  --muted-foreground: 220 8.9% 46.1%;
+  --accent: 220 14.3% 95.9%;
+  --border: 220 13% 91%;
+  --input: 220 13% 91%;
+}
+
+/* Light mode enhancements for better visual hierarchy */
+:root:not(.dark) .react-flow__node {
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+}
+
+:root:not(.dark) .react-flow__edge {
+  stroke: #64748b;
+}
+
+:root:not(.dark) .react-flow__edge.selected {
+  stroke: #0969da;
+}
+
+/* Better panel styling in light mode */
+:root:not(.dark) .bg-card {
+  background-color: hsl(0 0% 98%);
+  border-color: hsl(220 13% 91%);
+}
+
+:root:not(.dark) .border-border {
+  border-color: hsl(220 13% 91%);
+}
+
+/* Enhanced button and tab styling in light mode to match dark mode appearance */
+:root:not(.dark) {
+  /* Make buttons more prominent in light mode */
+  --primary: 217.2 91.2% 59.8%;
+  --primary-foreground: 222.2 84% 4.9%;
+  --secondary: 210 40% 94%;
+  --secondary-foreground: 222.2 84% 4.9%;
+  --accent: 210 40% 94%;
+  --accent-foreground: 222.2 84% 4.9%;
+  --muted: 210 40% 96%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+}
+
+/* Enhanced button styling */
+:root:not(.dark) button[variant="outline"] {
+  background-color: hsl(0 0% 98%);
+  border-color: hsl(217.2 32.6% 85%);
+  color: hsl(222.2 84% 4.9%);
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+}
+
+:root:not(.dark) button[variant="outline"]:hover {
+  background-color: hsl(210 40% 94%);
+  border-color: hsl(217.2 32.6% 75%);
+  box-shadow: 0 2px 4px 0 rgb(0 0 0 / 0.1);
+  transform: translateY(-1px);
+  transition: all 0.2s ease;
+}
+
+:root:not(.dark) button[variant="default"] {
+  background-color: hsl(217.2 91.2% 59.8%);
+  color: hsl(222.2 84% 4.9%);
+}
+
+:root:not(.dark) button[variant="default"]:hover {
+  background-color: hsl(217.2 91.2% 54%);
+}
+
+:root:not(.dark) button[variant="secondary"] {
+  background-color: hsl(210 40% 94%);
+  color: hsl(222.2 84% 4.9%);
+}
+
+:root:not(.dark) button[variant="secondary"]:hover {
+  background-color: hsl(210 40% 90%);
+}
+
+:root:not(.dark) button[variant="ghost"]:hover {
+  background-color: hsl(210 40% 94%);
+  color: hsl(222.2 84% 4.9%);
+}
+
+/* Enhanced tab styling */
+:root:not(.dark) [role="tablist"] {
+  background-color: hsl(210 40% 96%);
+  border: 1px solid hsl(217.2 32.6% 85%);
+}
+
+:root:not(.dark) [role="tab"] {
+  color: hsl(215.4 16.3% 46.9%);
+}
+
+:root:not(.dark) [role="tab"]:hover {
+  background-color: hsl(210 40% 92%);
+  color: hsl(222.2 84% 4.9%);
+}
+
+:root:not(.dark) [role="tab"][aria-selected="true"] {
+  background-color: hsl(0 0% 100%);
+  color: hsl(222.2 84% 4.9%);
+  border: 1px solid hsl(217.2 32.6% 85%);
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+  font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+}
+
+#root {
+  width: 100vw;
+  height: 100vh;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* React Flow specific styles */
+.react-flow__node {
+  font-family: inherit;
+}
+
+.react-flow__edge-path {
+  stroke-width: 2;
+}
+
+.react-flow__edge.selected .react-flow__edge-path {
+  stroke: #3b82f6;
+  stroke-width: 3;
+}
+
+/* Custom edge styles for different types */
+.react-flow__edge.edge-retry .react-flow__edge-path {
+  stroke: #3b82f6;
+  stroke-dasharray: 5,5;
+}
+
+.react-flow__edge.edge-terminal .react-flow__edge-path {
+  stroke: #10b981;
+  stroke-width: 3;
+}
+
+.react-flow__edge.edge-guard-success .react-flow__edge-path {
+  stroke: #10b981;
+}
+
+.react-flow__edge.edge-guard-failure .react-flow__edge-path {
+  stroke: #ef4444;
+}
+
+/* Read-only edges (from non-active requests) */
+.react-flow__edge.edge-readonly .react-flow__edge-path {
+  stroke: #94a3b8;
+  opacity: 0.6;
+}
+
+/* Main (success) edges */
+.react-flow__edge.edge-main .react-flow__edge-path {
+  stroke: #10b981;
+  stroke-width: 2;
+}
+
+.react-flow__edge.edge-main.selected .react-flow__edge-path {
+  stroke: #3b82f6;
+  stroke-width: 3;
+}
+
+/* Alternative strategy main edge (has failure path) */
+.react-flow__edge.edge-has-alternative .react-flow__edge-path {
+  stroke: #10b981;
+  stroke-width: 2;
+}
+
+/* Failure/Alternative edges */
+.react-flow__edge.edge-failure .react-flow__edge-path {
+  stroke: #ef4444;
+  stroke-dasharray: 8,4;
+  stroke-width: 2;
+  opacity: 0.8;
+}
+
+.react-flow__edge.edge-failure .react-flow__edge-text {
+  fill: #ef4444;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* Failure edges are not selectable */
+.react-flow__edge.edge-failure {
+  pointer-events: none;
+}
+
+/* Other failure handling strategy styles */
+.react-flow__edge.edge-retry .react-flow__edge-path {
+  stroke: #8b5cf6;
+  stroke-dasharray: 3,3;
+  stroke-width: 2;
+}
+
+.react-flow__edge.edge-skip .react-flow__edge-path {
+  stroke: #06b6d4;
+  stroke-dasharray: 12,8;
+  stroke-width: 2;
+}
+
+.react-flow__edge.edge-continue .react-flow__edge-path {
+  stroke: #10b981;
+  stroke-dasharray: 2,2,8,2;
+  stroke-width: 2;
+}
+
+/* Edge type indicators */
+.react-flow__edge.edge-main .react-flow__edge-text {
+  fill: #10b981;
+  font-weight: 500;
+}
+
+.react-flow__edge.edge-has-alternative .react-flow__edge-text {
+  fill: #f59e0b;
+  font-weight: 600;
+}
+
+/* Enhanced YAML syntax highlighting */
+.yaml-preview .yaml-key,
+.yaml-key { 
+  color: #0969da !important; 
+  font-weight: 600; 
+}
+.dark .yaml-preview .yaml-key,
+.dark .yaml-key { 
+  color: #58a6ff !important; 
+}
+
+.yaml-preview .yaml-string,
+.yaml-string { 
+  color: #0a3069 !important; 
+}
+.dark .yaml-preview .yaml-string,
+.dark .yaml-string { 
+  color: #a5d6ff !important; 
+}
+
+.yaml-string-content {
+  color: #0550ae;
+}
+.dark .yaml-string-content {
+  color: #79c0ff;
+}
+
+.yaml-unquoted-string {
+  color: #0550ae;
+}
+.dark .yaml-unquoted-string {
+  color: #79c0ff;
+}
+
+.yaml-preview .yaml-number,
+.yaml-number { 
+  color: #0550ae !important; 
+  font-weight: 500; 
+}
+.dark .yaml-preview .yaml-number,
+.dark .yaml-number { 
+  color: #79c0ff !important; 
+}
+
+.yaml-preview .yaml-boolean,
+.yaml-boolean { 
+  color: #cf222e !important; 
+  font-weight: 600; 
+}
+.dark .yaml-preview .yaml-boolean,
+.dark .yaml-boolean { 
+  color: #ff7b72 !important; 
+}
+
+.yaml-null { 
+  color: #656d76; 
+  font-style: italic; 
+}
+.dark .yaml-null { 
+  color: #8b949e; 
+}
+
+.yaml-comment { 
+  color: #656d76; 
+  font-style: italic; 
+}
+.dark .yaml-comment { 
+  color: #8b949e; 
+}
+
+.yaml-array-item { 
+  color: #cf222e; 
+  font-weight: bold; 
+}
+.dark .yaml-array-item { 
+  color: #ff7b72; 
+}
+
+.yaml-preview .yaml-punctuation,
+.yaml-punctuation { 
+  color: #24292f !important; 
+}
+.dark .yaml-preview .yaml-punctuation,
+.dark .yaml-punctuation { 
+  color: #f0f6fc !important; 
+}
+
+.yaml-literal { 
+  color: #8250df; 
+  font-weight: 600; 
+}
+.dark .yaml-literal { 
+  color: #d2a8ff; 
+}
+
+.yaml-anchor { 
+  color: #1f883d; 
+  font-weight: 600; 
+}
+.dark .yaml-anchor { 
+  color: #3fb950; 
+}
+
+.yaml-reference { 
+  color: #0969da; 
+  font-weight: 600; 
+}
+.dark .yaml-reference { 
+  color: #58a6ff; 
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Simulation highlight animation */
+@keyframes simulation-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+  }
+}
+
+.simulation-highlight {
+  animation: simulation-pulse 2s infinite;
+}
