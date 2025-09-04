@@ -76,9 +76,10 @@ import { YamlHighlighter } from './lib/yaml-highlighter'
 import { generateId } from './lib/utils'
 import { useUndoRedo, useUndoRedoShortcuts } from './hooks/useUndoRedo'
 import { WorkflowSimulator } from './lib/workflow-simulator'
-import { CollaborationManager } from './lib/collaboration'
-import IssuesPanel from './components/IssuesPanel'
-import { useDebounce, useThrottle, performanceMonitor, WorkflowCache } from './lib/performance'
+  import { CollaborationManager } from './lib/collaboration'
+  import IssuesPanel from './components/IssuesPanel'
+  import { useDebounce, useThrottle, performanceMonitor, WorkflowCache } from './lib/performance'
+  import { LayoutAlgorithms } from './lib/layout-algorithms'
 
 const nodeTypes = { step: StepNode, guard: GuardNode }
 
@@ -126,7 +127,7 @@ interface AppStateV3 extends Omit<AppState, 'activeWorkflow' | 'ui'> {
   }
 }
 
-const StepFlowBuilderAppV4: React.FC = () => {
+  const StepFlowBuilderAppV4: React.FC = () => {
   const [appState, setAppState] = useState<AppStateV3>({
     config: INITIAL_CONFIG,
     activeWorkflow: undefined,
@@ -189,6 +190,7 @@ viewMode: 'tabs' // Always use multi-tab mode
   const [validationResults, setValidationResults] = useState<Record<string, ValidationIssue[]>>({})
   const [showIssuesPanel, setShowIssuesPanel] = useState(false)
   const [isDslMaximized, setIsDslMaximized] = useState(false)
+  const [layoutVersion, setLayoutVersion] = useState(0)
   
   // Collaboration state
   const [collaborationManager] = useState(() => new CollaborationManager(
@@ -768,6 +770,31 @@ viewMode: 'tabs' // Always use multi-tab mode
     return () => window.removeEventListener('keydown', onKey)
   }, [copySelectedNode, pasteNodeFromClipboard])
 
+  // Auto-arrange current workflow/tab nodes left-to-right
+  const autoArrange = useCallback(() => {
+    if (appState.ui.viewMode === 'tabs' && currentTab) {
+      const layoutEdges = (currentTab.edges || []).filter(e => !e.className?.includes('edge-failure'))
+      const { nodes: laidOut } = LayoutAlgorithms.applyLayout(currentTab.nodes || [], layoutEdges as any, 'hierarchical', {
+        spacing: { x: 380, y: 180 },
+        padding: { x: 120, y: 120 },
+        direction: 'LR'
+      })
+      updateTabState({ nodes: laidOut })
+      // force ReactFlow to remount so fitView triggers on next render
+      setLayoutVersion(v => v + 1)
+    } else {
+      // Single mode: not primary path in V4, but attempt using computed nodes/edges
+      const layoutEdges = (edges || []).filter(e => !e.className?.includes('edge-failure'))
+      const { nodes: laidOut } = LayoutAlgorithms.applyLayout(nodes || [], layoutEdges as any, 'hierarchical', {
+        spacing: { x: 380, y: 180 },
+        padding: { x: 120, y: 120 },
+        direction: 'LR'
+      })
+      // no direct setter for single mode nodes; users typically work in tabs
+      console.debug('Auto-arrange (single mode) computed positions:', laidOut.length)
+    }
+  }, [appState.ui.viewMode, currentTab, nodes, edges, updateTabState])
+
   // Connection handler
   const onConnect = useCallback((connection: Connection) => {
     if (!connection.source || !connection.target) return
@@ -1189,7 +1216,7 @@ viewMode: 'tabs' // Always use multi-tab mode
               <div key={`${tab.workflowName}-${appState.activeTabIndex}`} className="absolute inset-0 h-full w-full z-10">
                 <ReactFlowProvider>
                   <ReactFlow
-                    key={`rf-${tab.id}-${appState.activeTabIndex}`}
+                    key={`rf-${tab.id}-${appState.activeTabIndex}-${layoutVersion}`}
                     nodes={tab.nodes}
                     edges={tab.edges}
                     onNodesChange={onNodesChange}
@@ -1219,6 +1246,14 @@ viewMode: 'tabs' // Always use multi-tab mode
                     </Panel>
 
                     <Panel position="top-right" className="p-2 flex gap-2">
+                      <Button
+                        size="sm"
+                        onClick={autoArrange}
+                        className="shadow-lg bg-primary hover:bg-primary/90 text-primary-foreground w-10 h-10 p-0"
+                        title="Auto Arrange (Left→Right)"
+                      >
+                        <LayoutDashboard className="w-5 h-5" />
+                      </Button>
                       <Button
                         size="sm"
                         onClick={() => setShowQuickAddDialog(true)}
@@ -1272,6 +1307,14 @@ viewMode: 'tabs' // Always use multi-tab mode
           
           {/* Canvas Action Buttons */}
           <Panel position="top-right" className="p-2 flex gap-2">
+            <Button
+              size="sm"
+              onClick={autoArrange}
+              className="shadow-lg bg-primary hover:bg-primary/90 text-primary-foreground w-10 h-10 p-0"
+              title="Auto Arrange (Left→Right)"
+            >
+              <LayoutDashboard className="w-5 h-5" />
+            </Button>
             {/* Add Step Button */}
             <Button
               size="sm"

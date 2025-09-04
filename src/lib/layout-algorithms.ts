@@ -10,6 +10,8 @@ export interface LayoutOptions {
     y: number
   }
   algorithm: 'hierarchical' | 'force' | 'circular' | 'tree' | 'grid'
+  // Direction for hierarchical/tree layouts
+  direction?: 'TB' | 'LR' // Top-to-Bottom (default) or Left-to-Right
 }
 
 export interface LayoutResult {
@@ -35,7 +37,8 @@ export class LayoutAlgorithms {
     const defaultOptions: LayoutOptions = {
       spacing: { x: 280, y: 150 },
       padding: { x: 50, y: 50 },
-      algorithm
+      algorithm,
+      direction: 'TB'
     }
     
     const finalOptions = { ...defaultOptions, ...options }
@@ -61,7 +64,7 @@ export class LayoutAlgorithms {
     edges: Edge[], 
     options: LayoutOptions
   ): LayoutResult {
-    const { spacing, padding } = options
+    const { spacing, padding, direction = 'TB' } = options
     
     // Find root node
     const rootNode = nodes.find(n => 
@@ -118,21 +121,29 @@ export class LayoutAlgorithms {
     let maxY = 0
     
     levelGroups.forEach((levelNodes, level) => {
-      const y = padding.y + level * spacing.y
-      const totalWidth = (levelNodes.length - 1) * spacing.x
-      const startX = padding.x - totalWidth / 2
-      
-      levelNodes.forEach((node, index) => {
-        const x = startX + index * spacing.x
-        
-        updatedNodes.push({
-          ...node,
-          position: { x, y }
+      if (direction === 'TB') {
+        // Top-to-bottom (existing): y grows with level; spread x within level
+        const y = padding.y + level * spacing.y
+        const totalWidth = Math.max(0, (levelNodes.length - 1) * spacing.x)
+        const startX = padding.x - totalWidth / 2
+        levelNodes.forEach((node, index) => {
+          const x = startX + index * spacing.x
+          updatedNodes.push({ ...node, position: { x, y } })
+          maxX = Math.max(maxX, x + 200)
+          maxY = Math.max(maxY, y + 100)
         })
-        
-        maxX = Math.max(maxX, x + 200) // Assume node width ~200px
-        maxY = Math.max(maxY, y + 100) // Assume node height ~100px
-      })
+      } else {
+        // Left-to-right: x grows with level; spread y within level
+        const x = padding.x + level * spacing.x
+        const totalHeight = Math.max(0, (levelNodes.length - 1) * spacing.y)
+        const startY = padding.y - totalHeight / 2
+        levelNodes.forEach((node, index) => {
+          const y = startY + index * spacing.y
+          updatedNodes.push({ ...node, position: { x, y } })
+          maxX = Math.max(maxX, x + 200)
+          maxY = Math.max(maxY, y + 100)
+        })
+      }
     })
     
     return {
