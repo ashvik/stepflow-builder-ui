@@ -184,7 +184,7 @@ viewMode: 'tabs' // Always use multi-tab mode
   const [showQuickAddDialog, setShowQuickAddDialog] = useState(false)
   const [activeTab, setActiveTab] = useState<'workflow' | 'configuration' | 'yaml' | 'dsl' | 'properties'>('dsl')
   const [yamlViewMode, setYamlViewMode] = useState<'yaml' | 'tree'>('tree')
-  const [sidebarWidth, setSidebarWidth] = useState(384) // 96 * 4 = 384px (w-96)
+  const [sidebarWidth, setSidebarWidth] = useState(480) // Increased from 384px to 480px to reduce vertical scrolling
   const [isResizing, setIsResizing] = useState(false)
   const [validationResults, setValidationResults] = useState<Record<string, ValidationIssue[]>>({})
   const [showIssuesPanel, setShowIssuesPanel] = useState(false)
@@ -1447,7 +1447,7 @@ viewMode: 'tabs' // Always use multi-tab mode
               
               const handleMouseMove = (e: MouseEvent) => {
                 const deltaX = startX - e.clientX
-                const newWidth = Math.max(300, Math.min(800, startWidth + deltaX))
+                const newWidth = Math.max(300, Math.min(1000, startWidth + deltaX))
                 setSidebarWidth(newWidth)
               }
               
@@ -1466,7 +1466,7 @@ viewMode: 'tabs' // Always use multi-tab mode
             }}
           >
             {/* Main resize line */}
-            <div className="absolute inset-y-0 left-1/2 transform -translate-x-1/2 w-px bg-border group-hover:bg-primary/60 transition-colors duration-200"></div>
+            <div className="absolute inset-y-0 left-1/2 transform -translate-x-1/2 w-px bg-border group-hover:bg-primary/60 transition-colors duration-200 dark:bg-border"></div>
             
             {/* Visual grip indicator */}
             <div className={`absolute inset-y-0 left-1/2 transform -translate-x-1/2 flex items-center justify-center transition-opacity duration-200 ${
@@ -1495,7 +1495,7 @@ viewMode: 'tabs' // Always use multi-tab mode
           </div>
           
           <div 
-            className={`border-l border-border bg-card flex flex-col overflow-hidden transition-all duration-200 flex-shrink-0 ${
+            className={`border-l border-gray-200 dark:border-gray-800 bg-card flex flex-col overflow-hidden transition-all duration-200 flex-shrink-0 ${
               isResizing ? 'select-none' : ''
             }`}
             style={{ width: `${sidebarWidth}px` }}

@@ -23,7 +23,7 @@ const DslEditor: React.FC<DslEditorProps> = ({
   getSuggestions,
   errors = [],
   showLineNumbers = true,
-  height = 'h-96',
+  height = 'h-[600px]',
   placeholder = 'Type DSL syntax here...'
 }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -174,6 +174,35 @@ const DslEditor: React.FC<DslEditorProps> = ({
       }
     }).join('')
   }, [escapeHtml, tokenizeLine])
+
+  // Keep cursor in view when navigating
+  const scrollCursorIntoView = useCallback(() => {
+    const textarea = textareaRef.current
+    if (!textarea) return
+
+    const cursorPosition = textarea.selectionStart
+    const textBeforeCursor = value.slice(0, cursorPosition)
+    const linesBeforeCursor = textBeforeCursor.split('\n')
+    const currentLineIndex = linesBeforeCursor.length - 1
+    
+    // Calculate cursor line position
+    const lineHeight = 20 // matches the lineHeight in CSS
+    const cursorTop = currentLineIndex * lineHeight
+    const containerHeight = textarea.clientHeight
+    const scrollTop = textarea.scrollTop
+    
+    // Check if cursor is outside visible area
+    const visibleTop = scrollTop
+    const visibleBottom = scrollTop + containerHeight - 40 // 40px buffer for better UX
+    
+    if (cursorTop < visibleTop) {
+      // Cursor is above visible area - scroll up
+      textarea.scrollTop = Math.max(0, cursorTop - 20)
+    } else if (cursorTop > visibleBottom) {
+      // Cursor is below visible area - scroll down
+      textarea.scrollTop = cursorTop - containerHeight + 60
+    }
+  }, [value])
 
   // Sync scroll between textarea and background with precise alignment
   const syncScroll = useCallback(() => {
@@ -433,6 +462,11 @@ const DslEditor: React.FC<DslEditorProps> = ({
     // Reset navigation flag when releasing arrow keys
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
       setIsNavigatingSuggestions(false)
+      // Also ensure cursor stays in view for arrow keys
+      setTimeout(() => {
+        scrollCursorIntoView()
+        syncScroll()
+      }, 0)
     }
     // Call updateSuggestions for other keys
     if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') {
@@ -504,6 +538,8 @@ const DslEditor: React.FC<DslEditorProps> = ({
       setTimeout(() => {
         const newPos = start + 1 + indent.length + extraIndent.length
         textarea.selectionStart = textarea.selectionEnd = newPos
+        scrollCursorIntoView()
+        syncScroll()
       }, 0)
     }
 
@@ -518,12 +554,22 @@ const DslEditor: React.FC<DslEditorProps> = ({
       
       setTimeout(() => {
         textarea.selectionStart = textarea.selectionEnd = start + 2
+        scrollCursorIntoView()
+        syncScroll()
+      }, 0)
+    }
+
+    // Track cursor movement for navigation keys
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End', 'PageUp', 'PageDown'].includes(e.key)) {
+      setTimeout(() => {
+        scrollCursorIntoView()
+        syncScroll()
       }, 0)
     }
   }
 
   return (
-    <div className={cn('relative font-mono text-sm border rounded-lg overflow-hidden bg-white dark:bg-gray-900', className)}>
+    <div className={cn('relative font-mono text-sm border rounded-lg overflow-hidden bg-white dark:bg-gray-900', className, height)}>
       <div className="relative flex h-full">
         {/* Line numbers */}
         {showLineNumbers && (
@@ -590,7 +636,7 @@ const DslEditor: React.FC<DslEditorProps> = ({
         )}
 
         {/* Editor area */}
-        <div className={cn('flex-1 relative overflow-hidden', height)} style={{ isolation: 'isolate' }}>
+        <div className="flex-1 relative overflow-auto" style={{ isolation: 'isolate' }}>
           {/* Syntax highlighting background */}
           <div
             ref={backgroundRef}
@@ -626,8 +672,20 @@ const DslEditor: React.FC<DslEditorProps> = ({
             onChange={handleTextareaChange}
             onKeyDown={handleKeyDown}
             onKeyUp={handleKeyUp}
-            onClick={updateSuggestions}
-            onFocus={updateSuggestions}
+            onClick={() => {
+              updateSuggestions()
+              setTimeout(() => {
+                scrollCursorIntoView()
+                syncScroll()
+              }, 0)
+            }}
+            onFocus={() => {
+              updateSuggestions()
+              setTimeout(() => {
+                scrollCursorIntoView()
+                syncScroll()
+              }, 0)
+            }}
             onScroll={syncScroll}
             className={cn(
               'relative w-full h-full resize-none bg-transparent p-3 outline-none z-20',

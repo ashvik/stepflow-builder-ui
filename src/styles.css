@@ -148,8 +148,10 @@
 /* Better resize cursor */
 .cursor-col-resize {
   cursor: col-resize !important;
+}
 
-  /* Custom CSS variables for shadcn/ui */
+/* Custom CSS variables for shadcn/ui */
+:root {
   --background: 0 0% 100%;
   --foreground: 222.2 84% 4.9%;
   --card: 0 0% 100%;

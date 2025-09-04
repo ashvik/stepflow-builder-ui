@@ -135,7 +135,7 @@ const DslViewer: React.FC<DslViewerProps> = ({ config, onConfigChange, className
               }}
               getSuggestions={(ctx) => getDslSuggestions(ctx, config, components)}
               errors={parseErrors}
-              height="h-80"
+              height="h-[600px]"
 placeholder="# Example DSL syntax:\n\nsettings:\n  timeout = 30000\n\nworkflow OrderProcess:\n  root: ValidateOrder\n  ValidateOrder -> ProcessPayment\n  ProcessPayment -> SUCCESS\n\nstep ValidateOrder: ValidationStep\n  config:\n    strict = true"
             />
             {error && (
