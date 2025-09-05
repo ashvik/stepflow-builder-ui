@@ -76,11 +76,13 @@ import YAML from 'yaml'
 import { YamlHighlighter } from './lib/yaml-highlighter'
 import { generateId } from './lib/utils'
 import { useUndoRedo, useUndoRedoShortcuts } from './hooks/useUndoRedo'
-import { WorkflowSimulator } from './lib/workflow-simulator'
-  import { CollaborationManager } from './lib/collaboration'
-  import IssuesPanel from './components/IssuesPanel'
-  import { useDebounce, useThrottle, performanceMonitor, WorkflowCache } from './lib/performance'
-  import { LayoutAlgorithms } from './lib/layout-algorithms'
+  import { WorkflowSimulator } from './lib/workflow-simulator'
+    import { CollaborationManager } from './lib/collaboration'
+    import IssuesPanel from './components/IssuesPanel'
+    import { useDebounce, useThrottle, performanceMonitor, WorkflowCache } from './lib/performance'
+    import { LayoutAlgorithms } from './lib/layout-algorithms'
+import DslQuickStart from './components/DslQuickStart'
+import { Tabs, TabsList, TabsTrigger } from './components/ui/tabs'
 
 const nodeTypes = { step: StepNode, guard: GuardNode }
 
@@ -186,6 +188,7 @@ viewMode: 'tabs' // Always use multi-tab mode
   const [showQuickAddDialog, setShowQuickAddDialog] = useState(false)
   const [activeTab, setActiveTab] = useState<'workflow' | 'configuration' | 'yaml' | 'dsl' | 'properties'>('dsl')
   const [yamlViewMode, setYamlViewMode] = useState<'yaml' | 'tree'>('tree')
+  const [dslInnerTab, setDslInnerTab] = useState<'editor' | 'quickstart'>('editor')
   const [sidebarWidth, setSidebarWidth] = useState(480) // Increased from 384px to 480px to reduce vertical scrolling
   const [isResizing, setIsResizing] = useState(false)
   const [validationResults, setValidationResults] = useState<Record<string, ValidationIssue[]>>({})
@@ -1947,8 +1950,16 @@ viewMode: 'tabs' // Always use multi-tab mode
                   : 'h-full overflow-auto'
               } transition-all duration-300`}>
                 {isDslMaximized && (
-                  <div className="flex items-center justify-between p-4 border-b">
-                    <h2 className="text-lg font-semibold">DSL Editor - Fullscreen</h2>
+                  <div className="flex items-center justify-between p-4 border-b bg-card">
+                    <div className="flex items-center gap-3">
+                      <h2 className="text-lg font-semibold">DSL</h2>
+                      <Tabs value={dslInnerTab} onValueChange={(v) => setDslInnerTab(v as any)}>
+                        <TabsList className="h-8 p-0 bg-transparent">
+                          <TabsTrigger value="editor" className="h-8 px-3 text-xs">Editor</TabsTrigger>
+                          <TabsTrigger value="quickstart" className="h-8 px-3 text-xs">Quick Start</TabsTrigger>
+                        </TabsList>
+                      </Tabs>
+                    </div>
                     <button
                       onClick={() => setIsDslMaximized(false)}
                       className="p-2 hover:bg-accent rounded transition-colors"
@@ -1961,9 +1972,17 @@ viewMode: 'tabs' // Always use multi-tab mode
                 <div className={`${isDslMaximized ? 'h-[calc(100vh-5rem)] overflow-auto' : 'h-full'} flex flex-col`}>
                   {!isDslMaximized && (
                     <div className="flex items-center justify-between px-3 py-2 border-b bg-muted/30">
-                      <div className="flex items-center gap-2">
-                        <FileCode className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-sm font-medium text-muted-foreground">DSL Editor</span>
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2">
+                          <FileCode className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-sm font-medium text-muted-foreground">DSL</span>
+                        </div>
+                        <Tabs value={dslInnerTab} onValueChange={(v) => setDslInnerTab(v as any)}>
+                          <TabsList className="h-8 p-0 bg-transparent">
+                            <TabsTrigger value="editor" className="h-8 px-3 text-xs">Editor</TabsTrigger>
+                            <TabsTrigger value="quickstart" className="h-8 px-3 text-xs">Quick Start</TabsTrigger>
+                          </TabsList>
+                        </Tabs>
                       </div>
                       <button
                         onClick={() => setIsDslMaximized(true)}
@@ -1975,11 +1994,16 @@ viewMode: 'tabs' // Always use multi-tab mode
                     </div>
                   )}
                   <div className={`${isDslMaximized ? 'p-6' : 'p-3'} flex-1 overflow-auto`}>
-                    <DslViewer
-                      config={appState.config}
-                      onConfigChange={(newConfig) => setAppState(prev => ({ ...prev, config: newConfig }))}
-                      components={appState.components}
-                    />
+                    <div className={dslInnerTab === 'editor' ? '' : 'hidden'}>
+                      <DslViewer
+                        config={appState.config}
+                        onConfigChange={(newConfig) => setAppState(prev => ({ ...prev, config: newConfig }))}
+                        components={appState.components}
+                      />
+                    </div>
+                    <div className={dslInnerTab === 'quickstart' ? '' : 'hidden'}>
+                      <DslQuickStart />
+                    </div>
                   </div>
                 </div>
               </div>
