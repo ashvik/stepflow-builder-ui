@@ -55,7 +55,8 @@ import {
   Layers,
   List,
   FileCode,
-  Copy
+  Copy,
+  Trash2
 } from 'lucide-react'
 
 import { 
@@ -191,6 +192,7 @@ viewMode: 'tabs' // Always use multi-tab mode
   const [showIssuesPanel, setShowIssuesPanel] = useState(false)
   const [isDslMaximized, setIsDslMaximized] = useState(false)
   const [layoutVersion, setLayoutVersion] = useState(0)
+  const restorationCheckedRef = useRef(false)
   
   // Collaboration state
   const [collaborationManager] = useState(() => new CollaborationManager(
@@ -521,6 +523,119 @@ viewMode: 'tabs' // Always use multi-tab mode
   // Initialize components and setup
   useEffect(() => {
     setAppState(prev => ({ ...prev, components: MOCK_COMPONENTS }))
+  }, [])
+
+  // --- Session Persistence ---
+  const [hydrated, setHydrated] = useState(false)
+  type SavedSessionV1 = {
+    version: 1
+    timestamp: number
+    config: StepFlowConfig
+    activeTabIndex: number
+    // Node positions per workflow and viewport per tab
+    nodePositions: Record<string, Record<string, { x: number; y: number }>>
+    viewports: Record<string, { x: number; y: number; zoom: number }>
+  }
+
+  const SESSION_KEY = 'stepflow-session-v1'
+
+  // On load, restore previous session (ask user)
+  useEffect(() => {
+    if (restorationCheckedRef.current) return
+    restorationCheckedRef.current = true
+    try {
+      const raw = localStorage.getItem(SESSION_KEY)
+      if (!raw) {
+        setHydrated(true)
+        return
+      }
+      const saved: SavedSessionV1 = JSON.parse(raw)
+      if (!saved || saved.version !== 1 || !saved.config) return
+      const shouldRestore = confirm('Restore previous StepFlow session?')
+      if (!shouldRestore) {
+        setHydrated(true)
+        return
+      }
+      // Rebuild workflow tabs from saved config and reapply positions/viewport
+      const cfg = saved.config
+      const wfNames = Object.keys(cfg.workflows || {})
+      const rebuiltTabs: WorkflowTabState[] = wfNames.map((wfName) => {
+        const graph = generateGraphForWorkflow(cfg, wfName)
+        const posMap = saved.nodePositions?.[wfName] || {}
+        const mergedNodes = graph.nodes.map((n) => {
+          const p = posMap[n.id]
+          return p ? { ...n, position: { x: p.x, y: p.y } } : n
+        })
+        const viewport = saved.viewports?.[wfName] || { x: 0, y: 0, zoom: 1 }
+        return {
+          id: generateId('tab'),
+          workflowName: wfName,
+          nodes: mergedNodes,
+          edges: graph.edges,
+          selectedNodes: [],
+          selectedEdges: [],
+          viewport,
+        }
+      })
+      setAppState((prev) => ({
+        ...prev,
+        config: cfg,
+        workflowTabs: rebuiltTabs,
+        activeTabIndex: Math.min(saved.activeTabIndex ?? 0, Math.max(rebuiltTabs.length - 1, 0)),
+      }))
+      setHydrated(true)
+    } catch (e) {
+      console.warn('Failed to restore session', e)
+      setHydrated(true)
+    }
+  }, [generateGraphForWorkflow])
+
+  // Save session (config + node positions + viewport) when relevant state changes
+  useEffect(() => {
+    if (!hydrated) return
+    try {
+      const nodePositions: SavedSessionV1['nodePositions'] = {}
+      const viewports: SavedSessionV1['viewports'] = {}
+      for (const tab of appState.workflowTabs) {
+        nodePositions[tab.workflowName] = {}
+        for (const n of tab.nodes) {
+          nodePositions[tab.workflowName][n.id] = { x: n.position.x, y: n.position.y }
+        }
+        viewports[tab.workflowName] = tab.viewport
+      }
+      const payload: SavedSessionV1 = {
+        version: 1,
+        timestamp: Date.now(),
+        config: appState.config,
+        activeTabIndex: appState.activeTabIndex,
+        nodePositions,
+        viewports,
+      }
+      localStorage.setItem(SESSION_KEY, JSON.stringify(payload))
+    } catch (e) {
+      // ignore storage errors
+      console.warn('Failed to save session', e)
+    }
+  }, [hydrated, appState.config, appState.workflowTabs, appState.activeTabIndex])
+
+  const clearSession = useCallback(() => {
+    try {
+      localStorage.removeItem(SESSION_KEY)
+    } catch {}
+    // Reset state to a clean slate
+    setAppState({
+      config: INITIAL_CONFIG,
+      activeWorkflow: undefined,
+      workflowTabs: [],
+      activeTabIndex: 0,
+      components: MOCK_COMPONENTS,
+      scanPackages: [],
+      ui: {
+        panels: { navigator: true, properties: true, console: false },
+        showAllWorkflows: false,
+        viewMode: 'tabs',
+      },
+    })
   }, [])
 
   // Setup keyboard shortcuts
@@ -1227,6 +1342,11 @@ viewMode: 'tabs' // Always use multi-tab mode
                     onNodeDragStop={() => setIsDragging(false)}
                     nodeTypes={nodeTypes}
                     defaultViewport={tab.viewport}
+                    onMoveEnd={(e, viewport) => {
+                      if (appState.ui.viewMode === 'tabs') {
+                        updateTabState({ viewport })
+                      }
+                    }}
                     fitView
                     className="h-full w-full"
                   >
@@ -1436,6 +1556,18 @@ viewMode: 'tabs' // Always use multi-tab mode
           </Button>
           <Button size="icon" variant="outline" onClick={exportYAML} title="Export YAML">
             <Download className="w-4 h-4" />
+          </Button>
+
+          {/* Clear session */}
+          <Button
+            size="icon"
+            variant="outline"
+            onClick={() => {
+              if (confirm('Clear saved session and start fresh?')) clearSession()
+            }}
+            title="Clear Session"
+          >
+            <Trash2 className="w-4 h-4" />
           </Button>
 
           <Button 
