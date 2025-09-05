@@ -193,6 +193,11 @@ viewMode: 'tabs' // Always use multi-tab mode
   const [isDslMaximized, setIsDslMaximized] = useState(false)
   const [layoutVersion, setLayoutVersion] = useState(0)
   const restorationCheckedRef = useRef(false)
+  const [showCodegen, setShowCodegen] = useState(false)
+  const [codegenProjectName, setCodegenProjectName] = useState('stepflow-project')
+  const [codegenBasePackage, setCodegenBasePackage] = useState('com.example.stepflow')
+  const [codegenError, setCodegenError] = useState<string | null>(null)
+  const [codegenIncludeJava, setCodegenIncludeJava] = useState(true)
   
   // Collaboration state
   const [collaborationManager] = useState(() => new CollaborationManager(
@@ -637,6 +642,39 @@ viewMode: 'tabs' // Always use multi-tab mode
       },
     })
   }, [])
+
+  const canGenerateCode = useCallback(() => {
+    const stepsCount = Object.keys(appState.config.steps || {}).length
+    const wfCount = Object.keys(appState.config.workflows || {}).length
+    if (stepsCount === 0) return { ok: false, msg: 'No steps defined. Add steps before generating code.' }
+    if (wfCount === 0) return { ok: false, msg: 'No workflows defined. Create a workflow before generating code.' }
+    return { ok: true }
+  }, [appState.config])
+
+  const handleGenerateCode = useCallback(async () => {
+    const v = canGenerateCode()
+    if (!v.ok) {
+      setCodegenError(v.msg)
+      setShowCodegen(true)
+      return
+    }
+    try {
+      const { buildJavaZip } = await import('./lib/codegen')
+      const opts = { projectName: codegenProjectName || 'stepflow-project', basePackage: codegenBasePackage || 'com.example.stepflow' }
+      if (codegenIncludeJava) {
+        const blob = buildJavaZip(appState.config, opts)
+        const a = document.createElement('a')
+        a.href = URL.createObjectURL(blob)
+        a.download = `${opts.projectName}-java.zip`
+        a.click()
+        URL.revokeObjectURL(a.href)
+      }
+      setShowCodegen(false)
+    } catch (e) {
+      setCodegenError('Failed to generate code: ' + String(e))
+      setShowCodegen(true)
+    }
+  }, [appState.config, codegenProjectName, codegenBasePackage, codegenIncludeJava, canGenerateCode])
 
   // Setup keyboard shortcuts
   useUndoRedoShortcuts(undo, redo, canUndo, canRedo)
@@ -1558,6 +1596,23 @@ viewMode: 'tabs' // Always use multi-tab mode
             <Download className="w-4 h-4" />
           </Button>
 
+          {/* Generate Code */}
+          <Button
+            size="icon"
+            variant="outline"
+            onClick={() => {
+              const v = canGenerateCode()
+              setCodegenError(v.ok ? null : v.msg as any)
+              // Default project name from first workflow if available
+              const wfNames = Object.keys(appState.config.workflows || {})
+              if (wfNames.length > 0) setCodegenProjectName(wfNames[0])
+              setShowCodegen(true)
+            }}
+            title="Generate Java/Scala Code"
+          >
+            <FileCode className="w-4 h-4" />
+          </Button>
+
           {/* Clear session */}
           <Button
             size="icon"
@@ -2136,6 +2191,59 @@ viewMode: 'tabs' // Always use multi-tab mode
         </>
         )}
         
+      </div>
+
+      {/* Codegen Dialog */}
+      <div className={`fixed inset-0 z-50 ${showCodegen ? '' : 'hidden'}`}>
+        <div className="absolute inset-0 bg-black/50" onClick={() => setShowCodegen(false)} />
+        <div className="relative max-w-lg w-full mx-auto mt-24 bg-card border border-border rounded-lg shadow-xl p-5">
+          <div className="flex items-center justify-between mb-3">
+            <div className="text-lg font-semibold">Generate Code</div>
+            <button className="p-1 hover:bg-muted rounded" onClick={() => setShowCodegen(false)}>
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          {codegenError && (
+            <div className="mb-3 p-2 rounded text-sm bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800">
+              {codegenError}
+            </div>
+          )}
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs block mb-1">Project Name</label>
+              <input
+                value={codegenProjectName}
+                onChange={(e) => setCodegenProjectName(e.target.value)}
+                className="w-full h-9 rounded border border-input bg-background px-2 text-sm"
+                placeholder="stepflow-project"
+              />
+            </div>
+            <div>
+              <label className="text-xs block mb-1">Base Package</label>
+              <input
+                value={codegenBasePackage}
+                onChange={(e) => setCodegenBasePackage(e.target.value)}
+                className="w-full h-9 rounded border border-input bg-background px-2 text-sm"
+                placeholder="com.example.stepflow"
+              />
+            </div>
+            <div className="flex items-center gap-4">
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" checked={codegenIncludeJava} onChange={(e) => setCodegenIncludeJava(e.target.checked)} />
+                Java zip
+              </label>
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 mt-5 pt-3 border-t border-border">
+            <button className="px-3 h-8 rounded border bg-background hover:bg-accent" onClick={() => setShowCodegen(false)}>Cancel</button>
+            <button
+              className="px-3 h-8 rounded bg-primary text-primary-foreground hover:opacity-90"
+              onClick={handleGenerateCode}
+            >
+              Download
+            </button>
+          </div>
+        </div>
       </div>
       
       {/* Quick Add Dialog */}
