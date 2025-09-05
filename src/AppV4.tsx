@@ -1555,18 +1555,16 @@ viewMode: 'tabs' // Always use multi-tab mode
             >
               YAML
             </button>
-            <div className={`flex-1 flex items-center justify-between px-3 py-2 text-sm font-medium transition-colors ${
+            <button
+              className={`flex-1 px-3 py-2 text-sm font-medium transition-colors text-center ${
                 activeTab === 'dsl'
                   ? 'text-primary border-b-2 border-primary bg-accent/20'
                   : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
-              }`}>
-              <button
-                onClick={() => setActiveTab('dsl')}
-                className="flex-1 text-left"
-              >
-                DSL
-              </button>
-            </div>
+              }`}
+              onClick={() => setActiveTab('dsl')}
+            >
+              DSL
+            </button>
             <button
               className={`flex-1 px-3 py-2 text-sm font-medium transition-colors ${
                 activeTab === 'properties'
@@ -1981,12 +1979,13 @@ viewMode: 'tabs' // Always use multi-tab mode
             
             {activeTab === 'workflow' && (
               <div className="h-full overflow-auto">
-            <WorkflowManager
-              config={appState.config}
-              activeWorkflow={appState.ui.viewMode === 'single' ? appState.activeWorkflow : currentTab?.workflowName}
-              onConfigChange={(newConfig) => setAppState(prev => ({ ...prev, config: newConfig }))}
-              onActiveWorkflowChange={handleActiveWorkflowChange}
-            />
+                <WorkflowManager
+                  config={appState.config}
+                  activeWorkflow={appState.ui.viewMode === 'single' ? appState.activeWorkflow : currentTab?.workflowName}
+                  onConfigChange={(newConfig) => setAppState(prev => ({ ...prev, config: newConfig }))}
+                  onActiveWorkflowChange={handleActiveWorkflowChange}
+                  embedded
+                />
               </div>
             )}
             

@@ -25,6 +25,8 @@ interface WorkflowManagerProps {
   onConfigChange: (config: StepFlowConfig) => void
   onActiveWorkflowChange: (workflowName: string) => void
   onAnalyzeWorkflow?: (workflowName: string) => void
+  /** When true, renders full-width without sidebar borders */
+  embedded?: boolean
 }
 
 interface WorkflowValidationResult {
@@ -42,6 +44,7 @@ const WorkflowManager: React.FC<WorkflowManagerProps> = ({
   onConfigChange,
   onActiveWorkflowChange,
   onAnalyzeWorkflow,
+  embedded = false,
 }) => {
   const [selectedWorkflow, setSelectedWorkflow] = useState<string>('')
   const [showValidation, setShowValidation] = useState(true)
@@ -324,7 +327,7 @@ const WorkflowManager: React.FC<WorkflowManagerProps> = ({
   }
   
   return (
-    <div className="w-96 border-r border-border bg-card flex flex-col">
+    <div className={embedded ? "w-full bg-card flex flex-col" : "w-96 border-r border-border bg-card flex flex-col"}>
       <div className="p-3 border-b border-border">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-semibold flex items-center gap-2">
