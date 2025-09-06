@@ -517,6 +517,67 @@ viewMode: 'tabs' // Always use multi-tab mode
   const selectedNodeId = selectedNodeIds[0]
   const selectedEdgeId = selectedEdgeIds[0]
 
+  // Derive trace highlighting based on the currently selected edge
+  const traced = useMemo(() => {
+    const edge = (appState.ui.viewMode === 'tabs' && currentTab)
+      ? (currentTab.edges || []).find(e => e.id === selectedEdgeId)
+      : (edges || []).find(e => e.id === selectedEdgeId)
+    if (!edge) return { active: false as const }
+    return { active: true as const, source: edge.source, target: edge.target, edgeId: edge.id }
+  }, [appState.ui.viewMode, currentTab, edges, selectedEdgeId])
+
+  // Apply visual trace (highlight endpoints and selected edge; dim others)
+  const displayNodes = useMemo(() => {
+    if (appState.ui.viewMode === 'tabs' && currentTab) {
+      if (!(traced as any).active) return currentTab.nodes
+      const { source, target } = traced as any
+      return (currentTab.nodes || []).map(n => ({
+        ...n,
+        data: {
+          ...(n.data as any),
+          traceHighlight: n.id === source || n.id === target,
+          traceRole: n.id === source ? 'source' : n.id === target ? 'target' : undefined,
+          traceDim: !(n.id === source || n.id === target),
+        }
+      }))
+    }
+    // single mode
+    if (!(traced as any).active) return nodes
+    const { source, target } = traced as any
+    return (nodes || []).map(n => ({
+      ...n,
+      data: {
+        ...(n.data as any),
+        traceHighlight: n.id === source || n.id === target,
+        traceRole: n.id === source ? 'source' : n.id === target ? 'target' : undefined,
+        traceDim: !(n.id === source || n.id === target),
+      }
+    }))
+  }, [appState.ui.viewMode, currentTab, nodes, traced])
+
+  const displayEdges = useMemo(() => {
+    if (appState.ui.viewMode === 'tabs' && currentTab) {
+      if (!(traced as any).active) return currentTab.edges
+      const { edgeId } = traced as any
+      return (currentTab.edges || []).map(e => ({
+        ...e,
+        className: `${e.className || ''} ${e.id === edgeId ? 'edge-trace-selected' : 'edge-trace-dim'}`.trim(),
+        markerEnd: e.id === edgeId 
+          ? ({ type: MarkerType.ArrowClosed, color: '#f59e0b', width: 24, height: 24 } as any)
+          : e.markerEnd
+      }))
+    }
+    if (!(traced as any).active) return edges
+    const { edgeId } = traced as any
+    return (edges || []).map(e => ({
+      ...e,
+      className: `${e.className || ''} ${e.id === edgeId ? 'edge-trace-selected' : 'edge-trace-dim'}`.trim(),
+      markerEnd: e.id === edgeId 
+        ? ({ type: MarkerType.ArrowClosed, color: '#f59e0b', width: 24, height: 24 } as any)
+        : e.markerEnd
+    }))
+  }, [appState.ui.viewMode, currentTab, edges, traced])
+
   // Undo/Redo system
   const { undo, redo, canUndo, canRedo, pushState } = useUndoRedo({
     nodes: nodes,
@@ -1373,8 +1434,8 @@ viewMode: 'tabs' // Always use multi-tab mode
                 <ReactFlowProvider>
                   <ReactFlow
                     key={`rf-${tab.id}-${appState.activeTabIndex}-${layoutVersion}`}
-                    nodes={tab.nodes}
-                    edges={tab.edges}
+                    nodes={displayNodes}
+                    edges={displayEdges}
                     onNodesChange={onNodesChange}
                     onEdgesChange={onEdgesChange}
                     onSelectionChange={onSelectionChange}
@@ -1453,8 +1514,8 @@ viewMode: 'tabs' // Always use multi-tab mode
     return (
       <ReactFlowProvider>
         <ReactFlow
-          nodes={nodes}
-          edges={edges}
+          nodes={displayNodes}
+          edges={displayEdges}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onSelectionChange={onSelectionChange}

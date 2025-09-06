@@ -68,6 +68,17 @@ const StepNode: React.FC<NodeProps<StepNodeData>> = ({ data, selected }) => {
     return <Settings className={cn('w-4 h-4', getIconColor())} />
   }
 
+  const traceHighlight = (data as any).traceHighlight as boolean | undefined
+  const traceDim = (data as any).traceDim as boolean | undefined
+  const traceRole = (data as any).traceRole as ('source' | 'target') | undefined
+
+  const getTraceClass = () => {
+    if (!traceHighlight) return ''
+    if (traceRole === 'source') return 'ring-2 ring-blue-500 ring-opacity-70 scale-[1.02] z-10'
+    if (traceRole === 'target') return 'ring-2 ring-green-500 ring-opacity-70 scale-[1.02] z-10'
+    return 'ring-2 ring-amber-500 ring-opacity-60 scale-[1.02] z-10'
+  }
+
   return (
     <div
       style={accent ? { borderColor: accent } : undefined}
@@ -75,9 +86,18 @@ const StepNode: React.FC<NodeProps<StepNodeData>> = ({ data, selected }) => {
         'relative min-w-[220px] rounded-lg border-2 shadow-sm transition-all duration-200',
         getNodeStyle(),
         selected ? 'ring-2 ring-blue-500 ring-opacity-50' : '',
+        getTraceClass(),
+        traceDim ? 'opacity-40 grayscale-[25%]' : '',
         'hover:shadow-md'
       )}
     >
+      {/* Trace role badges */}
+      {traceRole === 'source' && (
+        <div className="absolute left-1 top-1 rounded px-1 py-0.5 text-[10px] font-bold bg-blue-600 text-white shadow">FROM</div>
+      )}
+      {traceRole === 'target' && (
+        <div className="absolute left-1 top-1 rounded px-1 py-0.5 text-[10px] font-bold bg-green-600 text-white shadow">TO</div>
+      )}
       {accent && <div className="absolute left-0 top-0 h-1 w-full rounded-t" style={{ background: accent }} />}
       {/* Edit Button Overlay */}
       <button
