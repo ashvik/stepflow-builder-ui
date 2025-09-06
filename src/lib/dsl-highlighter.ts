@@ -62,31 +62,31 @@ export class DslHighlighter {
 
     // Handle workflow definitions
     result = result.replace(
-      /^(workflow)(\s+)([A-Za-z_][\w]*)(\s*):(.*)$/gi,
+      /^(workflow)(\s+)([A-Za-z_][\w-]*)(\s*):(.*)$/gi,
       '<span class="dsl-keyword">$1</span>$2<span class="dsl-identifier">$3</span>$4<span class="dsl-punctuation">:</span>$5'
     )
 
     // Handle step definitions
     result = result.replace(
-      /^(step)(\s+)([A-Za-z_][\w]*)(\s*):(\s*)([A-Za-z_][\w\.]*)(.*)$/gi,
+      /^(step)(\s+)([A-Za-z_][\w-]*)(\s*):(\s*)([A-Za-z_][A-Za-z0-9_\.-]*)(.*)$/gi,
       '<span class="dsl-keyword">$1</span>$2<span class="dsl-identifier">$3</span>$4<span class="dsl-punctuation">:</span>$5<span class="dsl-type">$6</span>$7'
     )
 
     // Handle root declarations
     result = result.replace(
-      /^(root)(\s*):(\s*)([A-Za-z_][\w]*)(.*)$/gi,
+      /^(root)(\s*):(\s*)([A-Za-z_][\w-]*)(.*)$/gi,
       '<span class="dsl-property">$1</span>$2<span class="dsl-punctuation">:</span>$3<span class="dsl-identifier">$4</span>$5'
     )
 
     // Handle edge syntax (step1 -> step2)
     result = result.replace(
-      /([A-Za-z_][\w]*)(\s*)(->)(\s*)([A-Za-z_][\w]*|SUCCESS|FAILURE)/g,
+      /([A-Za-z_][\w-]*)(\s*)(->)(\s*)([A-Za-z_][\w-]*|SUCCESS|FAILURE)/g,
       '<span class="dsl-identifier">$1</span>$2<span class="dsl-arrow">$3</span>$4<span class="dsl-identifier">$5</span>'
     )
 
     // Handle guard syntax (? guardName)
     result = result.replace(
-      /(\?)(\s*)([A-Za-z_][\w]*)/g,
+      /(\?)(\s*)([A-Za-z_][\w-]*)/g,
       '<span class="dsl-operator">$1</span>$2<span class="dsl-guard">$3</span>'
     )
 
@@ -98,13 +98,13 @@ export class DslHighlighter {
 
     // Handle property assignments (key = value)
     result = result.replace(
-      /^([A-Za-z_][\w\.]*)(\s*)(=)(\s*)(.+)$/g,
+      /^([A-Za-z_][A-Za-z0-9_\.-]*)(\s*)(=)(\s*)(.+)$/g,
       '<span class="dsl-property">$1</span>$2<span class="dsl-operator">$3</span>$4<span class="dsl-value">$5</span>'
     )
 
     // Handle property names (key:)
     result = result.replace(
-      /^([A-Za-z_][\w]*)(\s*)(:)(.*)$/g,
+      /^([A-Za-z_][\w-]*)(\s*)(:)(.*)$/g,
       '<span class="dsl-property">$1</span>$2<span class="dsl-punctuation">$3</span>$4'
     )
 

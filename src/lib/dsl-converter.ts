@@ -63,10 +63,12 @@ export function parseDSL(text: string): DslParseResult {
   type Ctx = { type: 'root' } | { type: 'settings' } | { type: 'defaults' } | { type: 'workflow'; name: string } | { type: 'step'; name: string } | { type: 'step-config'; name: string }
   let ctx: Ctx = { type: 'root' }
 
-  const edgeRe = /^\s*([A-Za-z_][\w]*)\s*->\s*([A-Za-z_][\w]*|SUCCESS|FAILURE)(?:\s*\?\s*([A-Za-z_][\w]*))?(?:\s*(?:fail|on\s+failure)\s*(?:(?:->\s*([A-Za-z_][\w]*))|(?:retry\s+(\d+)x(?:\s*\/\s*([0-9]+(?:ms|s|m)))?)|skip|stop|continue))?\s*$/i
-  const kvRe = /^\s*([A-Za-z_][\w\.]*?)\s*=\s*(.+?)\s*$/
+  // Allow hyphens in identifiers (names, guards) while still disallowing leading hyphens
+  const edgeRe = /^\s*([A-Za-z_][\w-]*)\s*->\s*([A-Za-z_][\w-]*|SUCCESS|FAILURE)(?:\s*\?\s*([A-Za-z_][\w-]*))?(?:\s*(?:fail|on\s+failure)\s*(?:(?:->\s*([A-Za-z_][\w-]*))|(?:retry\s+(\d+)x(?:\s*\/\s*([0-9]+(?:ms|s|m)))?)|skip|stop|continue))?\s*$/i
+  // Keys can be dot-separated segments; allow hyphens within segments
+  const kvRe = /^\s*([A-Za-z_][A-Za-z0-9_\.-]*?)\s*=\s*(.+?)\s*$/
   const requiresRe = /^\s*requires:\s*(.+)\s*$/i
-  const retryRe = /^\s*retry:\s*(\d+)x(?:\s*\/\s*([0-9]+(?:ms|s|m)))?(?:\s*\?\s*([A-Za-z_][\w]*))?\s*$/i
+  const retryRe = /^\s*retry:\s*(\d+)x(?:\s*\/\s*([0-9]+(?:ms|s|m)))?(?:\s*\?\s*([A-Za-z_][\w-]*))?\s*$/i
 
   const indentOf = (line: string) => line.match(/^\s*/)?.[0].length ?? 0
 
@@ -78,9 +80,9 @@ export function parseDSL(text: string): DslParseResult {
     // section headers
     if (/^settings:\s*$/i.test(line)) { ctx = { type: 'settings' }; continue }
     if (/^defaults:\s*$/i.test(line)) { ctx = { type: 'defaults' }; continue }
-    const wfMatch = line.match(/^workflow\s+([A-Za-z_][\w]*)\s*:\s*$/i)
+    const wfMatch = line.match(/^workflow\s+([A-Za-z_][\w-]*)\s*:\s*$/i)
     if (wfMatch) { ctx = { type: 'workflow', name: wfMatch[1] }; if (!cfg.workflows![wfMatch[1]]) cfg.workflows![wfMatch[1]] = { root: '', edges: [] }; continue }
-    const stepMatch = line.match(/^step\s+([A-Za-z_][\w]*)\s*:\s*([A-Za-z_][\w\.]*)\s*$/i)
+    const stepMatch = line.match(/^step\s+([A-Za-z_][\w-]*)\s*:\s*([A-Za-z_][A-Za-z0-9_\.-]*)\s*$/i)
     if (stepMatch) {
       const [, name, type] = stepMatch
       if (!cfg.steps![name]) cfg.steps![name] = { type } as StepDef
@@ -116,7 +118,7 @@ export function parseDSL(text: string): DslParseResult {
     }
 
     if (ctx.type === 'workflow') {
-      if (/^root\s*:\s*[A-Za-z_][\w]*\s*$/i.test(line)) {
+      if (/^root\s*:\s*[A-Za-z_][\w-]*\s*$/i.test(line)) {
         const root = line.split(':')[1].trim()
         ;(cfg.workflows![ctx.name] as WorkflowDef).root = root
         continue

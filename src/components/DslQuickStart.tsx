@@ -81,7 +81,7 @@ const DslQuickStart: React.FC = () => {
           <div className="text-sm text-muted-foreground">Quick Start • DSL reference with comments</div>
           <div className="text-xs text-muted-foreground">Covers settings, defaults, steps, step guards, edge guards, all failure strategies, workflows, terminals.</div>
         </div>
-        <pre className="p-3 text-sm font-mono bg-muted/30 rounded-lg overflow-auto border border-border">
+        <pre className="p-3 text-sm font-mono bg-muted/30 rounded-lg overflow-auto border border-border select-text">
           <code dangerouslySetInnerHTML={{ __html: highlighted }} />
         </pre>
       </div>

@@ -93,7 +93,8 @@ const DslEditor: React.FC<DslEditorProps> = ({
       // Words (identifiers, keywords, etc.)
       if (/[a-zA-Z_]/.test(char)) {
         let word = ''
-        while (i < line.length && /[a-zA-Z0-9_]/.test(line[i])) {
+        // Allow hyphens and dots inside identifiers/types
+        while (i < line.length && /[a-zA-Z0-9_.-]/.test(line[i])) {
           word += line[i]
           i++
         }
