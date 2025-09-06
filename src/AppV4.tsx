@@ -517,21 +517,55 @@ viewMode: 'tabs' // Always use multi-tab mode
   const selectedNodeId = selectedNodeIds[0]
   const selectedEdgeId = selectedEdgeIds[0]
 
-  // Derive trace highlighting based on the currently selected edge
+  // Derive trace highlighting based on current selection (edge preferred, else node)
   const traced = useMemo(() => {
-    const edge = (appState.ui.viewMode === 'tabs' && currentTab)
-      ? (currentTab.edges || []).find(e => e.id === selectedEdgeId)
-      : (edges || []).find(e => e.id === selectedEdgeId)
-    if (!edge) return { active: false as const }
-    return { active: true as const, source: edge.source, target: edge.target, edgeId: edge.id }
-  }, [appState.ui.viewMode, currentTab, edges, selectedEdgeId])
+    // EDGE selection has priority
+    const allEdges = appState.ui.viewMode === 'tabs' && currentTab ? (currentTab.edges || []) : (edges || [])
+    const selEdge = allEdges.find(e => e.id === selectedEdgeId)
+    if (selEdge) {
+      return { mode: 'edge' as const, active: true as const, source: selEdge.source, target: selEdge.target, edgeId: selEdge.id }
+    }
+    // NODE selection
+    const nodeId = selectedNodeId
+    if (nodeId) {
+      return { mode: 'node' as const, active: true as const, nodeId }
+    }
+    return { active: false as const }
+  }, [appState.ui.viewMode, currentTab, edges, selectedEdgeId, selectedNodeId])
 
   // Apply visual trace (highlight endpoints and selected edge; dim others)
   const displayNodes = useMemo(() => {
     if (appState.ui.viewMode === 'tabs' && currentTab) {
       if (!(traced as any).active) return currentTab.nodes
+      if ((traced as any).mode === 'edge') {
+        const { source, target } = traced as any
+        return (currentTab.nodes || []).map(n => ({
+          ...n,
+          data: {
+            ...(n.data as any),
+            traceHighlight: n.id === source || n.id === target,
+            traceRole: n.id === source ? 'source' : n.id === target ? 'target' : undefined,
+            traceDim: !(n.id === source || n.id === target),
+          }
+        }))
+      } else {
+        const { nodeId } = traced as any
+        return (currentTab.nodes || []).map(n => ({
+          ...n,
+          data: {
+            ...(n.data as any),
+            traceHighlight: n.id === nodeId,
+            traceRole: undefined,
+            traceDim: n.id !== nodeId,
+          }
+        }))
+      }
+    }
+    // single mode
+    if (!(traced as any).active) return nodes
+    if ((traced as any).mode === 'edge') {
       const { source, target } = traced as any
-      return (currentTab.nodes || []).map(n => ({
+      return (nodes || []).map(n => ({
         ...n,
         data: {
           ...(n.data as any),
@@ -540,42 +574,69 @@ viewMode: 'tabs' // Always use multi-tab mode
           traceDim: !(n.id === source || n.id === target),
         }
       }))
+    } else {
+      const { nodeId } = traced as any
+      return (nodes || []).map(n => ({
+        ...n,
+        data: {
+          ...(n.data as any),
+          traceHighlight: n.id === nodeId,
+          traceRole: undefined,
+          traceDim: n.id !== nodeId,
+        }
+      }))
     }
-    // single mode
-    if (!(traced as any).active) return nodes
-    const { source, target } = traced as any
-    return (nodes || []).map(n => ({
-      ...n,
-      data: {
-        ...(n.data as any),
-        traceHighlight: n.id === source || n.id === target,
-        traceRole: n.id === source ? 'source' : n.id === target ? 'target' : undefined,
-        traceDim: !(n.id === source || n.id === target),
-      }
-    }))
   }, [appState.ui.viewMode, currentTab, nodes, traced])
 
   const displayEdges = useMemo(() => {
     if (appState.ui.viewMode === 'tabs' && currentTab) {
       if (!(traced as any).active) return currentTab.edges
+      if ((traced as any).mode === 'edge') {
+        const { edgeId } = traced as any
+        return (currentTab.edges || []).map(e => ({
+          ...e,
+          className: `${e.className || ''} ${e.id === edgeId ? 'edge-trace-selected' : 'edge-trace-dim'}`.trim(),
+          markerEnd: e.id === edgeId 
+            ? ({ type: MarkerType.ArrowClosed, color: '#f59e0b', width: 24, height: 24 } as any)
+            : e.markerEnd
+        }))
+      } else {
+        const { nodeId } = traced as any
+        return (currentTab.edges || []).map(e => {
+          const isIncident = e.source === nodeId || e.target === nodeId
+          return {
+            ...e,
+            className: `${e.className || ''} ${isIncident ? 'edge-trace-selected' : 'edge-trace-dim'}`.trim(),
+            markerEnd: isIncident
+              ? ({ type: MarkerType.ArrowClosed, color: '#f59e0b', width: 24, height: 24 } as any)
+              : e.markerEnd
+          }
+        })
+      }
+    }
+    if (!(traced as any).active) return edges
+    if ((traced as any).mode === 'edge') {
       const { edgeId } = traced as any
-      return (currentTab.edges || []).map(e => ({
+      return (edges || []).map(e => ({
         ...e,
         className: `${e.className || ''} ${e.id === edgeId ? 'edge-trace-selected' : 'edge-trace-dim'}`.trim(),
         markerEnd: e.id === edgeId 
           ? ({ type: MarkerType.ArrowClosed, color: '#f59e0b', width: 24, height: 24 } as any)
           : e.markerEnd
       }))
+    } else {
+      const { nodeId } = traced as any
+      return (edges || []).map(e => {
+        const isIncident = e.source === nodeId || e.target === nodeId
+        return {
+          ...e,
+          className: `${e.className || ''} ${isIncident ? 'edge-trace-selected' : 'edge-trace-dim'}`.trim(),
+          markerEnd: isIncident
+            ? ({ type: MarkerType.ArrowClosed, color: '#f59e0b', width: 24, height: 24 } as any)
+            : e.markerEnd
+        }
+      })
     }
-    if (!(traced as any).active) return edges
-    const { edgeId } = traced as any
-    return (edges || []).map(e => ({
-      ...e,
-      className: `${e.className || ''} ${e.id === edgeId ? 'edge-trace-selected' : 'edge-trace-dim'}`.trim(),
-      markerEnd: e.id === edgeId 
-        ? ({ type: MarkerType.ArrowClosed, color: '#f59e0b', width: 24, height: 24 } as any)
-        : e.markerEnd
-    }))
   }, [appState.ui.viewMode, currentTab, edges, traced])
 
   // Undo/Redo system
